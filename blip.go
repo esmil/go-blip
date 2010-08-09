@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	version = "v0.1" // Version of program
-	inFlightMessages = 300 // How many blips do we allow to be in-flight?
+	version          = "v0.1" // Version of program
+	inFlightMessages = 300    // How many blips do we allow to be in-flight?
 )
 
 type blip int64
