@@ -11,6 +11,9 @@ import (
 const (
 	version          = "v0.1" // Version of program
 	inFlightMessages = 300    // How many blips do we allow to be in-flight?
+	defaultSleeptime = 60 * 1000000000
+	monitorDevice    = "/dev/tty.usbserial"
+	connString       = "pgsql://localhost:54321/foo"
 )
 
 type blip int64
@@ -18,7 +21,7 @@ type blip int64
 func spawnFetcher() chan blip {
 	c := make(chan blip, inFlightMessages)
 	go func() {
-		sp, err := termios.Open("/dev/tty.usbserial", os.O_RDONLY, 0)
+		sp, err := termios.Open(monitorDevice, os.O_RDONLY, 0)
 		if err != nil {
 			panic(err)
 		}
@@ -34,8 +37,20 @@ func spawnFetcher() chan blip {
 	return c
 }
 
-func storeInDb(l *list.List) {
-	return
+func storeInDb(l *list.List) bool {
+	/*
+	conn, err := db.Connect(connString)
+	if err != nil {
+		syslog.Log(err)
+		return false
+	}
+	defer conn.Close()
+	ps = conn.Prepare("INSERT INTO blip (tsamp) VALUES ?")
+	for item := range l.Iter() {
+		ps.Execute(item)
+	}
+	 */
+	return true
 }
 
 func main() {
@@ -49,8 +64,11 @@ func main() {
 			l.PushBack(x)
 			fmt.Printf("Read blip %s", x)
 		default:
-			storeInDb(l)
-			time.Sleep(60 * 1000000000)
+			if storeInDb(l) {
+				// Nothing went wrong in the store, reset the in-flight list
+				l = list.New()
+			}
+			time.Sleep(defaultSleeptime)
 		}
 	}
 }
