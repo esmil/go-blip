@@ -26,6 +26,7 @@ func spawnFetcher() chan blip {
 		if err != nil {
 			panic(err)
 		}
+		defer sp.Close()
 		//sp.Set(termios.B9600)
 
 		b := make([]byte, 1)
