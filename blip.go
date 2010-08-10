@@ -38,13 +38,21 @@ func spawnFetcher() chan blip {
 	return c
 }
 
+func formatTstamp(t blip) string {
+	μseconds := uint64(t) / 1000
+
+	return fmt.Sprintf("TIMESTAMP 'epoch' + %d * INTERVAL '1 microseconds'",
+		μseconds)
+}
+
 func storeInDb(l *list.List) bool {
 	conn := pg.Connect(connString)
 	defer pg.Close(conn)
 
 	for item := range l.Iter() {
-		pg.Exec(conn,
-			fmt.Sprintf("INSERT INTO blip (tstamp) VALUES %d", item))
+		execString := fmt.Sprintf("INSERT INTO blip (tstamp) VALUES %d",
+			formatTstamp(item.(blip)))
+		pg.Exec(conn, execString)
 	}
 
 	return true
