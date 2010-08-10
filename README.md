@@ -20,5 +20,5 @@ Go-blip is a Go-program carrying out the storage-part of system, by writing each
      * Type encapsulation is key
      * Make calls into interface-calls
      * Look at what other SQL-db interfaces are doing and mimic them.
-     * Take a close look at http://code.google.com/p/gosqlite/source/browse/sqlite/sqlite.go where Russ Cox has made a similar interface for sqlite3
+     * Take a close look at [Ross Cox sqlite3 binding code](http://code.google.com/p/gosqlite/source/browse/sqlite/sqlite.go)
      * handle errors correctly by returning tuples of (x, err)
