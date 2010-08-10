@@ -11,6 +11,7 @@ Go-blip is a Go-program carrying out the storage-part of system, by writing each
   * use the "flag" module to parse and set command-line options
   * use the "syslog" package to log trouble
   * allow the program to daemonize
+  * make sure all needed packages can goinstall
   * The go-termios project need some TLC:
      * Remember to reset to the old termios settings when closing the port.
      * Improve the ability to set parameters to termios
