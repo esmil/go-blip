@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"container/list"
+	"fmt"
 	"os"
+	"pg"
 	"termios"
 	"time"
 )
@@ -38,18 +39,14 @@ func spawnFetcher() chan blip {
 }
 
 func storeInDb(l *list.List) bool {
-	/*
-	conn, err := db.Connect(connString)
-	if err != nil {
-		syslog.Log(err)
-		return false
-	}
-	defer conn.Close()
-	ps = conn.Prepare("INSERT INTO blip (tsamp) VALUES ?")
+	conn := pg.Connect(connString)
+	defer pg.Close(conn)
+
 	for item := range l.Iter() {
-		ps.Execute(item)
+		pg.Exec(conn,
+			fmt.Sprintf("INSERT INTO blip (tstamp) VALUES %d", item))
 	}
-	 */
+
 	return true
 }
 
