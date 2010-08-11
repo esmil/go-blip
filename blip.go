@@ -14,7 +14,16 @@ const (
 	inFlightMessages = 300    // How many blips do we allow to be in-flight?
 	defaultSleeptime = 60 * 1000000000
 	monitorDevice    = "/dev/tty.usbserial"
-	connString       = "pgsql://localhost:54321/foo"
+)
+
+var (
+	connParams       = &pgsql.ConnParams {
+	                         Host: "127.0.0.1",
+	                         Database: "blip",
+	                         User: "foo",
+	                         Password: "bar",
+	                    }
+
 )
 
 type blip int64
@@ -39,33 +48,35 @@ func spawnFetcher() chan blip {
 	return c
 }
 
-func formatTstamp(t blip) string {
+func tstamp(t blip) uint64 {
 	μseconds := uint64(t) / 1000
-
-	return fmt.Sprintf("TIMESTAMP 'epoch' + %d * INTERVAL '1 microseconds'",
-		μseconds)
+	return μseconds
 }
 
 func storeInDb(l *list.List) bool {
 	// Move this to top-level
-	connParams := &pgsql.ConnParams {
-	Host: "127.0.0.1",
-	Database: "blip",
-	User: "foo",
-	Password: "bar",
-	}
 	conn, err := pgsql.Connect(connParams)
 	if err != nil {
 		return false
 	}
 	defer conn.Close()
 
+	command := "INSERT INTO blip (tstamp) VALUES " +
+		"TIMESTAMP 'epoch' + @ms * INTERVAL '1 microseconds'"
+
+	tsParam := pgsql.NewParameter("@ms", pgsql.Integer)
+	stmt, err := conn.Prepare(command, tsParam)
+	if err != nil {
+		// Something went wrong, try again later
+		return false
+	}
+	defer stmt.Close()
+
 	for l.Len() > 0 {
 		elem := l.Front()
-		item := elem.Value
-		execString := fmt.Sprintf("INSERT INTO blip (tstamp) VALUES %d",
-			formatTstamp(item.(blip)))
-		n, err := conn.Execute(execString)
+		item := elem.Value.(blip)
+		tsParam.SetValue(tstamp(item))
+		n, err := stmt.Execute()
 		if err != nil {
 			// Something went wrong, try again later
 			return false
