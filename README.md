@@ -15,10 +15,5 @@ Go-blip is a Go-program carrying out the storage-part of system, by writing each
   * The go-termios project need some TLC:
      * Remember to reset to the old termios settings when closing the port.
      * Improve the ability to set parameters to termios
-  * The go-pg project need some TLC:
-     * All the unsafe.Pointer passing business should be packed up
-     * Type encapsulation is key
-     * Make calls into interface-calls
-     * Look at what other SQL-db interfaces are doing and mimic them.
-     * Take a close look at [Ross Cox sqlite3 binding code](http://code.google.com/p/gosqlite/source/browse/sqlite/sqlite.go)
-     * handle errors correctly by returning tuples of (x, err)
+  * Do more testing and integration of the go-pgsql package.
+
