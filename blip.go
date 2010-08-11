@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"pgsql"
-	"termios"
+	"serial"
 	"time"
 )
 
@@ -31,12 +31,11 @@ type blip int64
 func spawnFetcher() chan blip {
 	c := make(chan blip, inFlightMessages)
 	go func() {
-		sp, err := termios.Open(monitorDevice, os.O_RDONLY, 0)
+		sp, err := serial.Open(monitorDevice, os.O_RDONLY, 0, serial.B9600_8E2)
 		if err != nil {
 			panic(err)
 		}
 		defer sp.Close()
-		//sp.Set(termios.B9600)
 
 		b := make([]byte, 1)
 		for {
