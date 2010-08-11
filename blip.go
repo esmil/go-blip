@@ -65,16 +65,15 @@ func main() {
 	l := list.New()
 
 	for {
-		select {
-		case x := <-fetchC:
+		for x := range fetchC {
 			l.PushBack(x)
 			fmt.Printf("Read blip %s", x)
-		default:
-			if storeInDb(l) {
-				// Nothing went wrong in the store, reset the in-flight list
-				l = list.New()
-			}
-			time.Sleep(defaultSleeptime)
 		}
+
+		r := storeInDb(l)
+		if r == false {
+			fmt.Printf("Warning: DB has problems\n")
+		}
+		time.Sleep(defaultSleeptime)
 	}
 }
