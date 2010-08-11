@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"os"
-	"pg"
+	"pgsql"
 	"termios"
 	"time"
 )
@@ -47,13 +47,35 @@ func formatTstamp(t blip) string {
 }
 
 func storeInDb(l *list.List) bool {
-	conn := pg.Connect(connString)
-	defer pg.Close(conn)
+	// Move this to top-level
+	connParams := &pgsql.ConnParams {
+	Host: "127.0.0.1",
+	Database: "blip",
+	User: "foo",
+	Password: "bar",
+	}
+	conn, err := pgsql.Connect(connParams)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
 
-	for item := range l.Iter() {
+	for l.Len() > 0 {
+		elem := l.Front()
+		item := elem.Value
 		execString := fmt.Sprintf("INSERT INTO blip (tstamp) VALUES %d",
 			formatTstamp(item.(blip)))
-		pg.Exec(conn, execString)
+		n, err := conn.Execute(execString)
+		if err != nil {
+			// Something went wrong, try again later
+			return false
+		}
+
+		if n != 1 {
+			panic("More than one row altered by insert")
+		}
+
+		l.Remove(elem)
 	}
 
 	return true
