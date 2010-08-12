@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"container/list"
+	"flag"
 	"fmt"
 	"net/textproto"
 	"os"
@@ -19,13 +20,10 @@ const (
 )
 
 var (
-	connParams       = &pgsql.ConnParams {
-	                         Host: "127.0.0.1",
-	                         Database: "blip",
-	                         User: "foo",
-	                         Password: "bar",
-	                    }
-
+	host     = flag.String("host", "", "Postgres database host")
+	database = flag.String("db", "blip", "Name of the postgres database to connect to")
+	user     = flag.String("user", "blip", "Login for the database")
+	passwd   = flag.String("passwd", "", "Password for the database")
 )
 
 type blip int64
@@ -56,7 +54,12 @@ func tstamp(t blip) uint64 {
 }
 
 func storeInDb(l *list.List) bool {
-	// Move this to top-level
+	connParams := &pgsql.ConnParams{
+		Host:     *host,
+		Database: *database,
+		User:     *user,
+		Password: *passwd,
+	}
 	conn, err := pgsql.Connect(connParams)
 	if err != nil {
 		return false
@@ -96,6 +99,28 @@ func storeInDb(l *list.List) bool {
 
 func main() {
 	fmt.Printf("Blip storage daemon %s\n", version)
+	flag.Parse()
+
+	if *host == "" {
+		fmt.Fprintf(os.Stderr, "Postgres host not defined")
+		os.Exit(1)
+	}
+
+	// Carry out a test connect to the Database early on
+	//   Saves us the hassle if it goes wrong later on
+	connParams := &pgsql.ConnParams{
+		Host:     *host,
+		Database: *database,
+		User:     *user,
+		Password: *passwd,
+	}
+
+	db, err := pgsql.Connect(connParams)
+	if err != nil {
+		panic(err)
+	}
+	db.Close()
+
 	fetchC := spawnFetcher()
 	l := list.New()
 
