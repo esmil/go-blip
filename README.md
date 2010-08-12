@@ -7,13 +7,8 @@ Go-blip is a Go-program carrying out the storage-part of system, by writing each
 ## TODO in no particular order
 
   * The whole code base needs some testing to make sure it is correct.
-  * Set termios parameters correctly
-  * use the "flag" module to parse and set command-line options
+  * use the "log" package to log to a file
   * use the "syslog" package to log trouble
   * allow the program to daemonize
-  * make sure all needed packages can goinstall
-  * The go-termios project need some TLC:
-     * Remember to reset to the old termios settings when closing the port.
-     * Improve the ability to set parameters to termios
   * Do more testing and integration of the go-pgsql package.
 
