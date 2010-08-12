@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"container/list"
 	"fmt"
+	"net/textproto"
 	"os"
 	"pgsql"
 	"serial"
@@ -37,9 +39,10 @@ func spawnFetcher() chan blip {
 		}
 		defer sp.Close()
 
-		b := make([]byte, 1)
+		buf := bufio.NewReader(sp)
+		pr := textproto.NewReader(buf)
 		for {
-			sp.Read(b)
+			pr.ReadLine()
 			c <- blip(time.Nanoseconds())
 		}
 	}()
