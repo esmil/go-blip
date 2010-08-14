@@ -74,21 +74,15 @@ func storeInDb(l *list.List) bool {
 	logger.Log("Successfully connected to DB")
 
 	command := "INSERT INTO blip (tstamp) VALUES " +
-		"TIMESTAMP 'epoch' + @ms * INTERVAL '1 microseconds'"
-
-	tsParam := pgsql.NewParameter("@ms", pgsql.Integer)
-	stmt, err := conn.Prepare(command, tsParam)
-	if err != nil {
-		logger.Logf("Problem preparing statement: %s\n", err)
-		return false
-	}
-	defer stmt.Close()
+		"(TIMESTAMP 'epoch' + %d * INTERVAL '1 microseconds')"
 
 	for l.Len() > 0 {
+		logger.Log("Storing blip")
 		elem := l.Front()
 		item := elem.Value.(blip)
-		tsParam.SetValue(tstamp(item))
-		n, err := stmt.Execute()
+		logger.Logf("Item is %d", item)
+		n, err := conn.Execute(fmt.Sprintf(command, tstamp(item)))
+		logger.Log("Stmt executed")
 		if err != nil {
 			logger.Logf("Problem executing statement: %s\n", err)
 			return false
