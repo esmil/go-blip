@@ -1,7 +1,12 @@
-/* In database "labitat" */
+/* In database "blip or something such" */
 
-CREATE SCHEMA blip;
-CREATE TABLE blip.blip (
+BEGIN;
+
+CREATE TABLE blip (
        tstamp	       TIMESTAMP(6)
 );
+
+CREATE USER blip WITH PASSWORD '%%%PASSWORD%%%';
+GRANT INSERT ON blip TO blip;
+
 
