@@ -7,8 +7,9 @@ Go-blip is a Go-program carrying out the storage-part of system, by writing each
 ## TODO in no particular order
 
   * The whole code base needs some testing to make sure it is correct.
-  * use the "log" package to log to a file
   * use the "syslog" package to log trouble
   * allow the program to daemonize
-  * Do more testing and integration of the go-pgsql package.
+  * If we can't get a DB connection in 2 attempts, panic the program
+    It is better to exit loudly than to try to survive.
+
 
