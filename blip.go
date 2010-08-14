@@ -130,16 +130,20 @@ func main() {
 	fetchC := spawnFetcher()
 	l := list.New()
 
+	logger.Log("Entering storage processor loop\n")
 	for {
-		for x := range fetchC {
+		select {
+		case x := <-fetchC:
 			l.PushBack(x)
+		default:
+			if l.Len() > 0 {
+				logger.Logf("Read %d blips, storing\n", l.Len())
+				r := storeInDb(l)
+				if r == false {
+					logger.Log("Warning: DB has problems\n")
+				}
+			}
+			time.Sleep(defaultSleeptime)
 		}
-
-		logger.Logf("Read %d blips, storing\n", l.Len())
-		r := storeInDb(l)
-		if r == false {
-			logger.Log("Warning: DB has problems\n")
-		}
-		time.Sleep(defaultSleeptime)
 	}
 }
