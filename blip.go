@@ -66,6 +66,7 @@ func storeInDb(l *list.List) bool {
 		Password: *passwd,
 	}
 	conn, err := pgsql.Connect(connParams)
+	conn.LogLevel = pgsql.LogVerbose
 	if err != nil {
 		return false
 	}
