@@ -70,6 +70,7 @@ func storeInDb(l *list.List) bool {
 		return false
 	}
 	defer conn.Close()
+	logger.Log("Successfully connected to DB")
 
 	command := "INSERT INTO blip (tstamp) VALUES " +
 		"TIMESTAMP 'epoch' + @ms * INTERVAL '1 microseconds'"
@@ -77,7 +78,7 @@ func storeInDb(l *list.List) bool {
 	tsParam := pgsql.NewParameter("@ms", pgsql.Integer)
 	stmt, err := conn.Prepare(command, tsParam)
 	if err != nil {
-		// Something went wrong, try again later
+		logger.Logf("Problem preparing statement: %s\n", err)
 		return false
 	}
 	defer stmt.Close()
@@ -88,7 +89,7 @@ func storeInDb(l *list.List) bool {
 		tsParam.SetValue(tstamp(item))
 		n, err := stmt.Execute()
 		if err != nil {
-			// Something went wrong, try again later
+			logger.Logf("Problem executing statement: %s\n", err)
 			return false
 		}
 
@@ -98,7 +99,7 @@ func storeInDb(l *list.List) bool {
 
 		l.Remove(elem)
 	}
-
+	logger.Log("All blips successfully stored\n")
 	return true
 }
 
@@ -137,12 +138,12 @@ func main() {
 	for {
 		for x := range fetchC {
 			l.PushBack(x)
-			fmt.Printf("Read blip %s", x)
 		}
 
+		logger.Logf("Read %d blips, storing\n", l.Len())
 		r := storeInDb(l)
 		if r == false {
-			fmt.Printf("Warning: DB has problems\n")
+			logger.Log("Warning: DB has problems\n")
 		}
 		time.Sleep(defaultSleeptime)
 	}
