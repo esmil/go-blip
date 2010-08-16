@@ -59,13 +59,9 @@ func tstamp(t blip) uint64 {
 }
 
 func storeInDb(l *list.List) bool {
-	connParams := &pgsql.ConnParams{
-		Host:     *host,
-		Database: *database,
-		User:     *user,
-		Password: *passwd,
-	}
-	conn, err := pgsql.Connect(connParams)
+	connStr := fmt.Sprintf("host='%s' dbname='%s' user='%s' password='%s'",
+		*host, *database, *user, *passwd)
+	conn, err := pgsql.Connect(connStr, pgsql.LogError)
 	conn.LogLevel = pgsql.LogVerbose
 	if err != nil {
 		return false
@@ -111,15 +107,10 @@ func main() {
 
 	// Carry out a test connect to the Database early on
 	//   Saves us the hassle if it goes wrong later on
-	connParams := &pgsql.ConnParams{
-		Host:     *host,
-		Database: *database,
-		User:     *user,
-		Password: *passwd,
-	}
-
+	connStr := fmt.Sprintf("host='%s' dbname='%s' user='%s' password='%s'",
+		*host, *database, *user, *passwd)
 	logger.Logf("Making testconnection to pgsql://%s/%s\n", *host, *database)
-	db, err := pgsql.Connect(connParams)
+	db, err := pgsql.Connect(connStr, pgsql.LogError)
 	if err != nil {
 		panic(err)
 	}
