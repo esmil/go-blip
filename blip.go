@@ -25,6 +25,7 @@ var (
 	database = flag.String("db", "blip", "Name of the postgres database to connect to")
 	user     = flag.String("user", "blip", "Login for the database")
 	passwd   = flag.String("passwd", "", "Password for the database")
+	logFile  = flag.String("logfile", "", "What file to log in, if any")
 	logger *log.Logger
 )
 
@@ -95,15 +96,27 @@ func storeInDb(l *list.List) bool {
 }
 
 func main() {
-	logger = log.New(os.Stdout, nil, "blip ", log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
-	logger.Logf("Blip storage daemon %s\n", version)
-
 	flag.Parse()
 
 	if *host == "" {
 		fmt.Fprintf(os.Stderr, "Postgres host not defined\n")
 		os.Exit(1)
 	}
+
+	logArg := os.Stdout
+	if *logFile != "" {
+		l, err := os.Open(*logFile, os.O_WRONLY | os.O_APPEND | os.O_CREAT,
+			0660)
+		if err != nil {
+			panic("Logfile problem: " + err.String())
+		}
+
+		logArg = l
+	}
+
+	logger = log.New(logArg, nil, "blip ", log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+	logger.Logf("Blip storage daemon %s\n", version)
+
 
 	// Carry out a test connect to the Database early on
 	//   Saves us the hassle if it goes wrong later on
