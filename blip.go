@@ -17,16 +17,16 @@ const (
 	version          = "v0.1" // Version of program
 	inFlightMessages = 300    // How many blips do we allow to be in-flight?
 	defaultSleeptime = 60 * 1000000000
-	monitorDevice    = "/dev/tty.usbserial"
 )
 
 var (
-	host     = flag.String("host", "", "Postgres database host")
-	database = flag.String("db", "blip", "Name of the postgres database to connect to")
-	user     = flag.String("user", "blip", "Login for the database")
-	passwd   = flag.String("passwd", "", "Password for the database")
-	logFile  = flag.String("logfile", "", "What file to log in, if any")
-	logger *log.Logger
+	host      = flag.String("host", "", "Postgres database host")
+	database  = flag.String("db", "blip", "Name of the postgres database to connect to")
+	user      = flag.String("user", "blip", "Login for the database")
+	passwd    = flag.String("passwd", "", "Password for the database")
+	logFile   = flag.String("logfile", "", "What file to log in, if any")
+	serialDev = flag.String("dev", "/dev/ttyUSB0", "Serial device")
+	logger    *log.Logger
 )
 
 type blip int64
@@ -35,7 +35,7 @@ func spawnFetcher() chan blip {
 	c := make(chan blip, inFlightMessages)
 	logger.Log("Spawning the process responsible for serial fetching\n")
 	go func() {
-		sp, err := serial.Open(monitorDevice, os.O_RDONLY, 0, serial.B9600_8E2)
+		sp, err := serial.Open(*serialDev, os.O_RDONLY, 0, serial.B9600_8E2)
 		if err != nil {
 			panic(err)
 		}
@@ -105,7 +105,7 @@ func main() {
 
 	logArg := os.Stdout
 	if *logFile != "" {
-		l, err := os.Open(*logFile, os.O_WRONLY | os.O_APPEND | os.O_CREAT,
+		l, err := os.Open(*logFile, os.O_WRONLY|os.O_APPEND|os.O_CREAT,
 			0660)
 		if err != nil {
 			panic("Logfile problem: " + err.String())
@@ -114,9 +114,8 @@ func main() {
 		logArg = l
 	}
 
-	logger = log.New(logArg, nil, "blip ", log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+	logger = log.New(logArg, nil, "blip ", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
 	logger.Logf("Blip storage daemon %s\n", version)
-
 
 	// Carry out a test connect to the Database early on
 	//   Saves us the hassle if it goes wrong later on
@@ -129,7 +128,6 @@ func main() {
 	}
 	logger.Log("Connection successful")
 	db.Close()
-
 
 	fetchC := spawnFetcher()
 	l := list.New()
