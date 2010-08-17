@@ -33,20 +33,20 @@ type blip int64
 
 func spawnFetcher() chan blip {
 	c := make(chan blip, inFlightMessages)
-	logger.Log("Spawning the process responsible for serial fetching\n")
+	logger.Log("Spawning the process responsible for serial fetching")
 	go func() {
 		sp, err := serial.Open(*serialDev, os.O_RDONLY, 0, serial.B9600_8E2)
 		if err != nil {
 			panic(err)
 		}
 		defer sp.Close()
-		logger.Log("Serial line successfully opened\n")
+		logger.Log("Serial line successfully opened")
 
 		buf := bufio.NewReader(sp)
 		pr := textproto.NewReader(buf)
 		for {
 			ln, _ := pr.ReadLine()
-			logger.Logf("Read line from serial port: %s\n", ln)
+			logger.Logf("Read line from serial port: %s", ln)
 			c <- blip(time.Nanoseconds())
 		}
 	}()
@@ -81,7 +81,7 @@ func storeInDb(l *list.List) bool {
 		n, err := conn.Execute(fmt.Sprintf(command, tstamp(item)))
 		logger.Log("Stmt executed")
 		if err != nil {
-			logger.Logf("Problem executing statement: %s\n", err)
+			logger.Logf("Problem executing statement: %s", err)
 			return false
 		}
 
@@ -91,7 +91,7 @@ func storeInDb(l *list.List) bool {
 
 		l.Remove(elem)
 	}
-	logger.Log("All blips successfully stored\n")
+	logger.Log("All blips successfully stored")
 	return true
 }
 
@@ -115,13 +115,13 @@ func main() {
 	}
 
 	logger = log.New(logArg, nil, "blip ", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
-	logger.Logf("Blip storage daemon %s\n", version)
+	logger.Logf("Blip storage daemon %s", version)
 
 	// Carry out a test connect to the Database early on
 	//   Saves us the hassle if it goes wrong later on
 	connStr := fmt.Sprintf("host='%s' dbname='%s' user='%s' password='%s'",
 		*host, *database, *user, *passwd)
-	logger.Logf("Making testconnection to pgsql://%s/%s\n", *host, *database)
+	logger.Logf("Making testconnection to pgsql://%s/%s", *host, *database)
 	db, err := pgsql.Connect(connStr, pgsql.LogError)
 	if err != nil {
 		panic(err)
@@ -132,17 +132,17 @@ func main() {
 	fetchC := spawnFetcher()
 	l := list.New()
 
-	logger.Log("Entering storage processor loop\n")
+	logger.Log("Entering storage processor loop")
 	for {
 		select {
 		case x := <-fetchC:
 			l.PushBack(x)
 		default:
 			if l.Len() > 0 {
-				logger.Logf("Read %d blips, storing\n", l.Len())
+				logger.Logf("Read %d blips, storing", l.Len())
 				r := storeInDb(l)
 				if r == false {
-					logger.Log("Warning: DB has problems\n")
+					logger.Log("Warning: DB has problems")
 				}
 			}
 			time.Sleep(defaultSleeptime)
