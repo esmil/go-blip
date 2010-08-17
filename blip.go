@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/textproto"
 	"os"
+	"os/signal"
 	"pgsql"
 	"serial"
 	"time"
@@ -137,6 +138,12 @@ func main() {
 		select {
 		case x := <-fetchC:
 			l.PushBack(x)
+		case sig := <-signal.Incoming:
+			logger.Logf("Received %s, exiting.", sig)
+			if l.Len() > 0 {
+				storeInDb(l)
+			}
+			os.Exit(0)
 		default:
 			if l.Len() > 0 {
 				logger.Logf("Read %d blips, storing", l.Len())
